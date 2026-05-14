@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Eólico — TecNM AGS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=JetBrains+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #04090f;
+      --surface: #0b1420;
+      --surface2: #0f1d2e;
+      --border: #162338;
+      --primary: #00e5a0;
+      --primary-glow: rgba(0,229,160,0.25);
+      --accent: #ff6b2b;
+      --blue: #3ab0ff;
+      --warn: #ff3366;
+      --warn-glow: rgba(255,51,102,0.2);
+      --yellow: #f9d04a;
+      --text: #d9e8f5;
+      --muted: #486070;
+      --font-display: 'Orbitron', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ──────────────────────────────────────────── */
+    #sidebar {
+      width: 370px;
+      min-width: 370px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    #sidebar-header {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(160deg, #0c1928, #070f1c);
+      position: relative;
+      overflow: hidden;
+    }
+    #sidebar-header::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, var(--primary-glow), transparent 70%);
+      pointer-events: none;
+    }
+    .logo-tag {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--primary);
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .header-sub {
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── SECTIONS ─────────────────────────────────────────── */
+    .section {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* ── CONTROLS ─────────────────────────────────────────── */
+    .ctrl-group { margin-bottom: 14px; }
+    .ctrl-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ctrl-val {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--primary);
+      transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+    .dual-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    input[type="number"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      padding: 5px 8px;
+      border-radius: 5px;
+      width: 80px;
+      outline: none;
+      text-align: right;
+      transition: border-color 0.2s;
+    }
+    input[type="number"]:focus { border-color: var(--primary); }
+    .hint { font-size: 0.58rem; color: var(--muted); margin-top: 5px; }
+
+    /* ── EQUATION BOX ─────────────────────────────────────── */
+    .eq-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 14px;
+    }
+    .eq-main {
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      color: var(--primary);
+      letter-spacing: 0.05em;
+      text-align: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .eq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px 16px;
+    }
+    .eq-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.63rem;
+      padding: 2px 0;
+    }
+    .eq-key { color: var(--muted); }
+    .eq-val { color: var(--blue); font-weight: 700; }
+    .eq-val.live { color: var(--primary); }
+
+    /* ── SAFETY BANNER ────────────────────────────────────── */
+    #safety-banner {
+      display: none;
+      background: var(--warn-glow);
+      border: 1px solid var(--warn);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 0.66rem;
+      color: var(--warn);
+      text-align: center;
+      margin-top: 10px;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── METRICS ──────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .mc {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 11px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+    .mc.wide { grid-column: span 2; }
+    .mc.lit {
+      border-color: var(--primary);
+      box-shadow: 0 0 14px var(--primary-glow);
+    }
+    .mc-lbl {
+      font-size: 0.53rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .mc-val {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .mc-val.small { font-size: 0.95rem; }
+    .mc-val.orange { color: var(--accent); }
+    .mc-val.blue { color: var(--blue); }
+    .mc-unit { font-size: 0.6rem; color: var(--muted); margin-left: 2px; font-weight: 400; }
+
+    /* ── PROGRESS BAR ─────────────────────────────────────── */
+    .pbar-wrap {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .pbar { height: 100%; border-radius: 2px; transition: width 0.5s; background: var(--primary); }
+
+    /* ── LOADS ────────────────────────────────────────────── */
+    .load-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 0.72rem;
+      transition: all 0.4s;
+    }
+    .load-item.on {
+      border-color: var(--yellow);
+      background: rgba(249, 208, 74, 0.04);
+      box-shadow: 0 0 10px rgba(249,208,74,0.12);
+    }
+    .load-icon { font-size: 0.95rem; }
+    .load-name { flex: 1; color: var(--muted); transition: color 0.3s; }
+    .load-item.on .load-name { color: var(--yellow); }
+    .load-bar-wrap { width: 55px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .load-bar { height: 100%; width: 0; background: var(--yellow); border-radius: 2px; transition: width 0.5s; }
+    .load-item.on .load-bar { box-shadow: 0 0 6px var(--yellow); }
+    .load-w { font-size: 0.6rem; color: var(--muted); min-width: 44px; text-align: right; }
+    .load-item.on .load-w { color: var(--yellow); }
+
+    /* ── BUTTONS ──────────────────────────────────────────── */
+    .btn-group {
+      padding: 14px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+    }
+    button {
+      border: none; border-radius: 6px; padding: 12px;
+      font-family: var(--font-display); font-size: 0.65rem;
+      font-weight: 700; letter-spacing: 0.12em;
+      cursor: pointer; transition: all 0.2s;
+      width: 100%;
+    }
+    .btn-primary { background: var(--primary); color: #04090f; }
+    .btn-primary:hover {
+      background: #00ffb8;
+      box-shadow: 0 0 20px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── CANVAS ───────────────────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+      cursor: crosshair;
+    }
+    #windCanvas { width: 100%; height: 100%; display: block; }
+
+    /* ── HUD OVERLAY ──────────────────────────────────────── */
+    #hud {
+      position: absolute;
+      top: 18px; right: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .hud-card {
+      background: rgba(4, 9, 15, 0.82);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 13px;
+      backdrop-filter: blur(12px);
+      min-width: 130px;
+    }
+    .hud-lbl {
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .hud-val {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .hud-unit { font-size: 0.65rem; color: var(--muted); margin-left: 3px; }
+
+    #hud-safety {
+      display: none;
+      background: var(--warn-glow);
+      border: 1px solid var(--warn);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 0.6rem;
+      color: var(--warn);
+      text-align: center;
+      animation: blink 1s infinite;
+      backdrop-filter: blur(12px);
+    }
+
+    /* ── MODAL ────────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .overlay.show { display: flex; }
+    #modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 780px;
+      max-height: 92vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 900;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 22px;
+      letter-spacing: 0.1em;
+    }
+    .modal-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .chart-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px;
+    }
+    .chart-card.wide { grid-column: span 2; }
+    .chart-lbl {
+      font-size: 0.56rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-lbl {
+      font-size: 0.56rem;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .modal-footer {
+      text-align: center;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+    .modal-note {
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════  SIDEBAR  ════════════════════ -->
+<div id="sidebar">
+
+  <div id="sidebar-header">
+    <div class="logo-tag">TecNM · Campus Aguascalientes</div>
+    <h1>SIMULADOR<br>EÓLICO</h1>
+    <div class="header-sub">Física Real · Smart Grid · Ley de Betz</div>
+  </div>
+
+  <!-- PARÁMETROS DE TURBINA -->
+  <div class="section">
+    <div class="section-title">Parámetros de Turbina</div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        Radio del Rotor (R)
+        <span class="ctrl-val" id="lbl-r">1.5 m</span>
+      </div>
+      <div class="dual-row">
+        <input type="range" id="sl-r" min="0.5" max="10" step="0.5" value="1.5" oninput="setRadius(this.value)">
+        <input type="number" id="num-r" value="1.5" min="0.5" max="10" step="0.5" oninput="setRadius(this.value)">
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">
+        Velocidad del Viento
+        <span class="ctrl-val" id="lbl-w">0 km/h</span>
+      </div>
+      <div class="dual-row">
+        <input type="range" id="sl-w" min="0" max="100" step="1" value="0" oninput="setWind(this.value)">
+        <input type="number" id="num-w" value="0" min="0" max="100" step="1" oninput="setWind(this.value)">
+      </div>
+      <div class="hint">Viento = 0 → modo interactivo con el mouse</div>
+    </div>
+  </div>
+
+  <!-- FÍSICA EN TIEMPO REAL -->
+  <div class="section">
+    <div class="section-title">Física en Tiempo Real</div>
+    <div class="eq-box">
+      <div class="eq-main">P = ½ · ρ · A · v³ · Cp · η</div>
+      <div class="eq-grid">
+        <div class="eq-row">
+          <span class="eq-key">ρ (Ags ~1888m)</span>
+          <span class="eq-val">1.005 kg/m³</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">Cp (Betz)</span>
+          <span class="eq-val">0.45</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">A = πR²</span>
+          <span class="eq-val live" id="eq-area">7.07 m²</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">η generador</span>
+          <span class="eq-val">0.92</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">v (m/s)</span>
+          <span class="eq-val live" id="eq-v">0.00 m/s</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">v³</span>
+          <span class="eq-val live" id="eq-v3">0.0</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">Cut-in</span>
+          <span class="eq-val">12.6 km/h</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-key">Cut-out</span>
+          <span class="eq-val">90 km/h</span>
+        </div>
+      </div>
+    </div>
+    <div id="safety-banner">⚡ CORTE DE SEGURIDAD — VIENTO EXCESIVO</div>
+  </div>
+
+  <!-- MÉTRICAS -->
+  <div class="section">
+    <div class="section-title">Métricas del Sistema</div>
+    <div class="metrics-grid">
+
+      <div class="mc wide" id="mc-main">
+        <div class="mc-lbl">Potencia Generada</div>
+        <div class="mc-val" id="mv-power">0.0<span class="mc-unit">W</span></div>
+        <div class="pbar-wrap"><div class="pbar" id="pb-power"></div></div>
+      </div>
+
+      <div class="mc">
+        <div class="mc-lbl">Energía Acumulada</div>
+        <div class="mc-val small blue" id="mv-energy">0.000<span class="mc-unit">Wh</span></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">RPM del Rotor</div>
+        <div class="mc-val small orange" id="mv-rpm">0<span class="mc-unit">rpm</span></div>
+      </div>
+
+      <div class="mc">
+        <div class="mc-lbl">Factor de Planta</div>
+        <div class="mc-val small" id="mv-cf">0.0<span class="mc-unit">%</span></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Eficiencia Real</div>
+        <div class="mc-val small" id="mv-eff">0.0<span class="mc-unit">%</span></div>
+      </div>
+
+      <div class="mc">
+        <div class="mc-lbl">P. Nominal (12m/s)</div>
+        <div class="mc-val small blue" id="mv-rated">—<span class="mc-unit">W</span></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Pico Registrado</div>
+        <div class="mc-val small orange" id="mv-peak">0<span class="mc-unit">W</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SMART GRID -->
+  <div class="section">
+    <div class="section-title">Smart Grid — Cargas</div>
+    <div class="load-item" id="ld-L1">
+      <span class="load-icon">💡</span>
+      <span class="load-name">Alumbrado Público</span>
+      <div class="load-bar-wrap"><div class="load-bar" id="lb-L1"></div></div>
+      <span class="load-w" id="lw-L1">50 W</span>
+    </div>
+    <div class="load-item" id="ld-L2">
+      <span class="load-icon">🏠</span>
+      <span class="load-name">Residencial</span>
+      <div class="load-bar-wrap"><div class="load-bar" id="lb-L2"></div></div>
+      <span class="load-w" id="lw-L2">300 W</span>
+    </div>
+    <div class="load-item" id="ld-L3">
+      <span class="load-icon">🏭</span>
+      <span class="load-name">Industrial</span>
+      <div class="load-bar-wrap"><div class="load-bar" id="lb-L3"></div></div>
+      <span class="load-w" id="lw-L3">1200 W</span>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn-primary" onclick="finalize()">▶ FINALIZAR ANÁLISIS</button>
+    <button class="btn-secondary" onclick="location.reload()">↺ REINICIAR</button>
+  </div>
+</div>
+
+<!-- ════════════════════  CANVAS  ════════════════════ -->
+<div id="canvas-wrap">
+  <canvas id="windCanvas"></canvas>
+
+  <div id="hud">
+    <div class="hud-card">
+      <div class="hud-lbl">Vel. Viento</div>
+      <div class="hud-val"><span id="hud-w">0.0</span><span class="hud-unit">km/h</span></div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-lbl">Potencia</div>
+      <div class="hud-val"><span id="hud-p">0.0</span><span class="hud-unit">W</span></div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-lbl">Energía</div>
+      <div class="hud-val"><span id="hud-e">0.000</span><span class="hud-unit">Wh</span></div>
+    </div>
+    <div id="hud-safety">⚠ CORTE DE<br>SEGURIDAD</div>
+  </div>
+</div>
+
+<!-- ════════════════════  MODAL  ════════════════════ -->
+<div class="overlay" id="overlay">
+  <div id="modal">
+    <div class="modal-title">📊 REPORTE FINAL DE SIMULACIÓN</div>
+
+    <div class="modal-charts">
+      <div class="chart-card wide">
+        <div class="chart-lbl">Potencia Generada en el Tiempo</div>
+        <canvas id="ch-timeline" height="100"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-lbl">Curva de Potencia Teórica (P vs v)</div>
+        <canvas id="ch-curve" height="140"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-lbl">Histograma de Potencia (%)</div>
+        <canvas id="ch-hist" height="140"></canvas>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="st-maxv">—</div>
+        <div class="stat-lbl">Viento Máximo (km/h)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="st-maxp">—</div>
+        <div class="stat-lbl">Potencia Pico (W)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="st-energy">—</div>
+        <div class="stat-lbl">Energía Total (Wh)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="st-cf">—</div>
+        <div class="stat-lbl">Factor de Planta (%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="st-rpm">—</div>
+        <div class="stat-lbl">RPM Máximo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="st-rated">—</div>
+        <div class="stat-lbl">Potencia Nominal (W)</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-note">
+        ρ Aguascalientes ≈ 1.005 kg/m³ (alt. ~1888 m) &nbsp;·&nbsp;
+        Cp = 0.45 (Límite Betz: 0.593) &nbsp;·&nbsp;
+        η = 0.92 &nbsp;·&nbsp; TSR = 7 &nbsp;·&nbsp;
+        Cut-in: 3.5 m/s &nbsp;·&nbsp; Cut-out: 25 m/s
+      </div>
+      <button class="btn-secondary" onclick="location.reload()" style="width:auto;padding:10px 30px;">↺ NUEVA SIMULACIÓN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━  CONSTANTS  ━━━━━━━━━━━━━━━━━━━━━
+const RHO      = 1.005;    // kg/m³ — densidad aire en AGS ~1888m
+const CP       = 0.45;     // coeficiente de potencia práctico
+const ETA      = 0.92;     // eficiencia del generador
+const TSR      = 7;        // Tip Speed Ratio óptimo (3 aspas)
+const CUT_IN   = 12.6;     // km/h (3.5 m/s)
+const CUT_OUT  = 90.0;     // km/h (25 m/s)
+const RATED_KMH = 43.2;    // km/h (12 m/s) — velocidad nominal
+const FPS      = 60;
+const LOADS    = [
+  { id:'L1', thr:50  },
+  { id:'L2', thr:300 },
+  { id:'L3', thr:1200 },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━  STATE  ━━━━━━━━━━━━━━━━━━━━━━━━
+let R          = 1.5;
+let A          = Math.PI * R * R;
+let ratedP     = 0;           // recalculated on radius change
+
+let windKmh    = 0;
+let manual     = false;
+let cutout     = false;
+let active     = true;
+
+let velAng     = 0;           // visual angular velocity (rad/frame)
+let angle      = 0;
+
+let energyWh   = 0;
+let peakP      = 0;
+let peakV      = 0;
+let peakRPM    = 0;
+let sumP       = 0;
+let frames     = 0;
+
+let histP      = [];
+let histV      = [];
+
+let mouseImpulse = 0;
+
+// ━━━━━━━━━━━━━━━━━━━━━  PARTICLES  ━━━━━━━━━━━━━━━━━━━━
+let particles = [];
+
+function spawnParticles() {
+  if (windKmh < 5) return;
+  const n = Math.floor(windKmh / 25) + 1;
+  for (let i = 0; i < n; i++) {
+    particles.push({
+      x: -20,
+      y: Math.random() * H * 0.75,
+      vx: 2 + windKmh / 12,
+      vy: (Math.random() - 0.5) * 0.4,
+      len: 12 + Math.random() * 18,
+      life: 1,
+      decay: 0.003 + Math.random() * 0.003,
+      alpha: 0.25 + Math.random() * 0.35,
+    });
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━  PHYSICS  ━━━━━━━━━━━━━━━━━━━━━━
+function calcRatedP(area) {
+  const v = RATED_KMH / 3.6;
+  return 0.5 * RHO * area * v * v * v * CP * ETA;
+}
+
+function calcP(vKmh) {
+  const v = vKmh / 3.6;
+  const vCutIn  = CUT_IN  / 3.6;
+  const vRated  = RATED_KMH / 3.6;
+  const vCutOut = CUT_OUT / 3.6;
+  if (v < vCutIn || v >= vCutOut) return 0;
+  const raw = 0.5 * RHO * A * v * v * v * CP * ETA;
+  return Math.min(raw, ratedP);   // pitch control above rated
+}
+
+function calcRPM(vKmh) {
+  const v = vKmh / 3.6;
+  if (v < CUT_IN / 3.6) return 0;
+  return TSR * v / R / (2 * Math.PI) * 60;
+}
+
+function calcTheoreticalMax(vKmh) {
+  // Without Cp/eta (raw kinetic power through rotor)
+  const v = vKmh / 3.6;
+  return 0.5 * RHO * A * v * v * v;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━  CANVAS  ━━━━━━━━━━━━━━━━━━━━━━
+const canvas = document.getElementById('windCanvas');
+const ctx    = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width  = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Stars array — computed once
+const STARS = Array.from({ length: 90 }, (_, i) => ({
+  x: ((i * 127 + 41) % 1000) / 1000,
+  y: ((i * 211 + 19) % 1000) / 1000,
+  r: (i % 5 === 0) ? 1.4 : (i % 3 === 0) ? 1.0 : 0.6,
+  a: 0.4 + (i % 7) * 0.08,
+}));
+
+// City buildings data
+const BUILDINGS = [
+  { rx:-0.35, w:55,  h:45,  thr:50   },
+  { rx:-0.27, w:38,  h:28,  thr:50   },
+  { rx:-0.15, w:30,  h:22,  thr:50   },
+  { rx: 0.14, w:75,  h:190, thr:300  },
+  { rx: 0.24, w:65,  h:95,  thr:300  },
+  { rx: 0.34, w:100, h:110, thr:1200 },
+  { rx: 0.44, w:55,  h:65,  thr:1200 },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━  DRAWING  ━━━━━━━━━━━━━━━━━━━━━━
+function drawBackground() {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0,   '#010408');
+  sky.addColorStop(0.5, '#040c18');
+  sky.addColorStop(1,   '#081420');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  STARS.forEach(s => {
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H * 0.55, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Moon
+  const mx = W * 0.85, my = H * 0.12;
+  const moonGrad = ctx.createRadialGradient(mx - 3, my - 3, 2, mx, my, 20);
+  moonGrad.addColorStop(0, 'rgba(220,235,255,0.95)');
+  moonGrad.addColorStop(1, 'rgba(100,150,200,0)');
+  ctx.fillStyle = moonGrad;
+  ctx.beginPath(); ctx.arc(mx, my, 20, 0, Math.PI * 2); ctx.fill();
+
+  // Horizon glow
+  const hor = ctx.createLinearGradient(0, H - 160, 0, H - 100);
+  hor.addColorStop(0, 'transparent');
+  hor.addColorStop(1, 'rgba(0,50,80,0.3)');
+  ctx.fillStyle = hor;
+  ctx.fillRect(0, H - 160, W, 60);
+
+  // Ground
+  const gnd = ctx.createLinearGradient(0, H - 130, 0, H);
+  gnd.addColorStop(0, '#081520');
+  gnd.addColorStop(1, '#040c14');
+  ctx.fillStyle = gnd;
+  ctx.fillRect(0, H - 130, W, 130);
+}
+
+function drawCity(power) {
+  const gnd = H - 130;
+  const cx = W / 2;
+
+  BUILDINGS.forEach(b => {
+    const bx = cx + b.rx * W;
+    const lit = power >= b.thr;
+
+    // Body
+    ctx.fillStyle = lit ? '#0e1e30' : '#060d18';
+    ctx.fillRect(bx, gnd - b.h, b.w, b.h);
+
+    // Edge highlight
+    ctx.strokeStyle = lit ? '#1a3555' : '#0a1525';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, gnd - b.h, b.w, b.h);
+
+    // Windows
+    const cols = Math.floor(b.w / 13);
+    const rows = Math.floor(b.h / 17);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const wx = bx + 4 + c * 13;
+        const wy = gnd - b.h + 6 + r * 17;
+        ctx.fillStyle = lit ? '#f0c840' : '#0c1825';
+        if (lit) { ctx.shadowColor = '#f9d04a'; ctx.shadowBlur = 3; }
+        ctx.fillRect(wx, wy, 6, 7);
+      }
+    }
+    ctx.shadowBlur = 0;
+  });
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life * p.alpha;
+    const hue = 160 + windKmh * 0.6;
+    ctx.strokeStyle = `hsl(${hue}, 80%, 68%)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x - p.len, p.y + p.vy * 5);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawTurbine(power) {
+  const cx  = W / 2;
+  const ty  = H * 0.18;
+  const gnd = H - 130;
+  const bLen = Math.min(W * 0.13, 130);
+
+  // Tower shadow
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 20;
+  ctx.beginPath(); ctx.moveTo(cx + 8, ty + 6); ctx.lineTo(cx + 20, gnd + 5); ctx.stroke();
+  ctx.restore();
+
+  // Tower body
+  const tg = ctx.createLinearGradient(cx - 10, 0, cx + 12, 0);
+  tg.addColorStop(0, '#101e30');
+  tg.addColorStop(0.4, '#1e3a58');
+  tg.addColorStop(1, '#0a1825');
+  ctx.strokeStyle = tg;
+  ctx.lineWidth = 16;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx, ty); ctx.lineTo(cx, gnd); ctx.stroke();
+
+  // Ambient glow
+  if (power > 0 && !cutout) {
+    const glowR = bLen * 1.35;
+    const ratio = Math.min(power / ratedP, 1);
+    const g = ctx.createRadialGradient(cx, ty, 0, cx, ty, glowR);
+    g.addColorStop(0,   `rgba(0,229,160,${0.06 + ratio * 0.18})`);
+    g.addColorStop(0.5, `rgba(0,229,160,${0.03 + ratio * 0.08})`);
+    g.addColorStop(1,   'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, ty, glowR, 0, Math.PI * 2); ctx.fill();
+  }
+  if (cutout) {
+    const g = ctx.createRadialGradient(cx, ty, 0, cx, ty, bLen);
+    g.addColorStop(0, 'rgba(255,51,102,0.15)');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, ty, bLen, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Blades
+  ctx.save();
+  ctx.translate(cx, ty);
+  ctx.rotate(angle);
+
+  for (let i = 0; i < 3; i++) {
+    ctx.rotate((2 * Math.PI) / 3);
+    ctx.save();
+
+    const bg = ctx.createLinearGradient(0, 0, 0, -bLen);
+    if (cutout) {
+      bg.addColorStop(0,   '#501520');
+      bg.addColorStop(0.5, '#cc2244');
+      bg.addColorStop(1,   '#ff6688');
+    } else {
+      bg.addColorStop(0,   '#0a1e35');
+      bg.addColorStop(0.3, '#1a3d60');
+      bg.addColorStop(0.75,'#c8d8e8');
+      bg.addColorStop(1,   '#ffffff');
+    }
+
+    ctx.fillStyle = bg;
+    const glowC = cutout ? '#ff3366' : (power > 20 ? '#00e5a0' : 'transparent');
+    ctx.shadowColor = glowC;
+    ctx.shadowBlur = 14;
+
+    // NACA-inspired blade shape
+    const w0 = 12, wM = 16, wT = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(w0, -bLen * 0.08, wM, -bLen * 0.42, wT, -bLen);
+    ctx.bezierCurveTo(0, -bLen, -wT * 0.6, -bLen * 0.9, -w0 * 0.55, -bLen * 0.42);
+    ctx.bezierCurveTo(-w0 * 0.35, -bLen * 0.08, 0, 0, 0, 0);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Hub
+  const hR = 13;
+  const hg = ctx.createRadialGradient(cx - 3, ty - 3, 1, cx, ty, hR);
+  hg.addColorStop(0, '#5a7a98');
+  hg.addColorStop(1, '#162535');
+  ctx.fillStyle = hg;
+  ctx.shadowColor = cutout ? '#ff3366' : '#00e5a0';
+  ctx.shadowBlur = 16;
+  ctx.beginPath(); ctx.arc(cx, ty, hR, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#1e3855'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Power arc around hub (% of rated)
+  if (power > 0 && !cutout) {
+    const ratio = Math.min(power / ratedP, 1);
+    const arcR = hR + 7;
+    ctx.strokeStyle = `rgba(0,229,160,${0.3 + ratio * 0.6})`;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx, ty, arcR, -Math.PI / 2, -Math.PI / 2 + ratio * 2 * Math.PI);
+    ctx.stroke();
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━  MAIN LOOP  ━━━━━━━━━━━━━━━━━━━━
+function tick() {
+  // Wind
+  if (!manual) {
+    windKmh = mouseImpulse;
+    mouseImpulse *= 0.84;
+  }
+
+  // Safety cut-out
+  if (windKmh >= CUT_OUT) cutout = true;
+  if (cutout && windKmh < CUT_IN) cutout = false;
+
+  const power = cutout ? 0 : calcP(windKmh);
+  const rpm   = cutout ? 0 : calcRPM(windKmh);
+  const vMs   = windKmh / 3.6;
+  const vRated = RATED_KMH / 3.6;
+  const rawMax = calcTheoreticalMax(windKmh);
+
+  // Rotor visual physics
+  const omTarget = vMs * TSR / R / FPS;
+  if (!cutout) {
+    velAng += (omTarget - velAng) * 0.045;
+  } else {
+    velAng *= 0.92;   // aerodynamic braking
+  }
+  angle += velAng;
+
+  // Energy (dt = 1/FPS s → Wh)
+  energyWh += power / FPS / 3600;
+
+  // Stats
+  frames++;
+  sumP += power;
+  if (power > peakP) peakP = power;
+  if (windKmh > peakV) peakV = windKmh;
+  if (rpm > peakRPM) peakRPM = rpm;
+
+  if (frames % 8 === 0) {
+    histP.push(parseFloat(power.toFixed(1)));
+    histV.push(parseFloat(windKmh.toFixed(1)));
+  }
+
+  const avgP = sumP / frames;
+  const cf   = ratedP > 0 ? avgP / ratedP * 100 : 0;
+  const eff  = rawMax > 0 ? power / rawMax * 100 : 0;
+
+  // ── UI ──────────────────────────────────────────────
+  document.getElementById('eq-v').textContent  = vMs.toFixed(2) + ' m/s';
+  document.getElementById('eq-v3').textContent = (vMs ** 3).toFixed(1);
+
+  document.getElementById('safety-banner').style.display = cutout ? 'block' : 'none';
+  document.getElementById('hud-safety').style.display    = cutout ? 'block' : 'none';
+
+  // Power metric
+  const pStr = power >= 1000
+    ? (power / 1000).toFixed(3) + '<span class="mc-unit">kW</span>'
+    : power.toFixed(1) + '<span class="mc-unit">W</span>';
+  document.getElementById('mv-power').innerHTML = pStr;
+
+  const pbWidth = ratedP > 0 ? Math.min(power / ratedP * 100, 100) : 0;
+  document.getElementById('pb-power').style.width = pbWidth + '%';
+  document.getElementById('mc-main').classList.toggle('lit', power > 0);
+
+  // Energy
+  const eStr = energyWh >= 1
+    ? energyWh.toFixed(3) + '<span class="mc-unit">Wh</span>'
+    : (energyWh * 1000).toFixed(2) + '<span class="mc-unit">mWh</span>';
+  document.getElementById('mv-energy').innerHTML = eStr;
+
+  document.getElementById('mv-rpm').innerHTML  = rpm.toFixed(0) + '<span class="mc-unit">rpm</span>';
+  document.getElementById('mv-cf').innerHTML   = cf.toFixed(1)  + '<span class="mc-unit">%</span>';
+  document.getElementById('mv-eff').innerHTML  = eff.toFixed(1) + '<span class="mc-unit">%</span>';
+  document.getElementById('mv-peak').innerHTML = peakP.toFixed(0) + '<span class="mc-unit">W</span>';
+
+  // HUD
+  document.getElementById('hud-w').textContent = windKmh.toFixed(1);
+  document.getElementById('hud-p').textContent = power.toFixed(1);
+  document.getElementById('hud-e').textContent = energyWh.toFixed(3);
+
+  // Loads
+  const thrL = { L1:50, L2:300, L3:1200 };
+  ['L1','L2','L3'].forEach(id => {
+    const thr = thrL[id];
+    const on  = power >= thr;
+    document.getElementById('ld-' + id).classList.toggle('on', on);
+    document.getElementById('lb-' + id).style.width = on
+      ? '100%'
+      : Math.min(power / thr * 100, 95) + '%';
+  });
+
+  return power;
+}
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+
+  spawnParticles();
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= p.decay; });
+  drawParticles();
+
+  const power = active ? tick() : 0;
+  drawCity(power);
+  drawTurbine(power);
+
+  if (active) requestAnimationFrame(loop);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━  CONTROLS  ━━━━━━━━━━━━━━━━━━━━━
+function setRadius(val) {
+  R = Math.max(0.5, Math.min(10, parseFloat(val) || 1.5));
+  A = Math.PI * R * R;
+  ratedP = calcRatedP(A);
+  document.getElementById('sl-r').value   = R;
+  document.getElementById('num-r').value  = R;
+  document.getElementById('lbl-r').textContent = R.toFixed(1) + ' m';
+  document.getElementById('eq-area').textContent = A.toFixed(2) + ' m²';
+  document.getElementById('mv-rated').innerHTML = ratedP.toFixed(0) + '<span class="mc-unit">W</span>';
+}
+
+function setWind(val) {
+  const v = Math.max(0, Math.min(100, parseFloat(val) || 0));
+  document.getElementById('sl-w').value  = v;
+  document.getElementById('num-w').value = v;
+  document.getElementById('lbl-w').textContent = v.toFixed(0) + ' km/h';
+  if (v > 0) { manual = true; windKmh = v; }
+  else { manual = false; }
+}
+
+window.addEventListener('mousemove', e => {
+  if (!active || manual || cutout) return;
+  mouseImpulse += (Math.abs(e.movementX) + Math.abs(e.movementY)) * 0.28;
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━  FINALIZE  ━━━━━━━━━━━━━━━━━━━━━
+const chartDefaults = {
+  tension: 0.4, fill: true, pointRadius: 0,
+  borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.07)',
+};
+const axisStyle = {
+  grid: { color: '#162338' },
+  ticks: { color: '#486070', font: { family: "'JetBrains Mono', monospace", size: 9 } },
+};
+
+function finalize() {
+  active = false;
+  document.getElementById('overlay').classList.add('show');
+
+  const avgP  = sumP / Math.max(frames, 1);
+  const cf    = ratedP > 0 ? avgP / ratedP * 100 : 0;
+
+  document.getElementById('st-maxv').textContent   = peakV.toFixed(1);
+  document.getElementById('st-maxp').textContent   = peakP.toFixed(1);
+  document.getElementById('st-energy').textContent = energyWh.toFixed(4);
+  document.getElementById('st-cf').textContent     = cf.toFixed(1) + '%';
+  document.getElementById('st-rpm').textContent    = peakRPM.toFixed(0);
+  document.getElementById('st-rated').textContent  = ratedP.toFixed(0);
+
+  // ── Chart 1: Timeline ──────────────────────────────
+  const step = Math.max(1, Math.floor(histP.length / 80));
+  new Chart(document.getElementById('ch-timeline').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: histP.filter((_, i) => i % step === 0).map((_, i) => i),
+      datasets: [{
+        ...chartDefaults,
+        label: 'Potencia (W)',
+        data: histP.filter((_, i) => i % step === 0),
+      }]
+    },
+    options: {
+      animation: false,
+      scales: {
+        y: { ...axisStyle, title: { display:true, text:'W', color:'#486070', font:{size:9} } },
+        x: { display: false }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // ── Chart 2: Power Curve P vs v ────────────────────
+  const vArr = Array.from({ length: 60 }, (_, i) => i * 100 / 59);
+  const pArr = vArr.map(v => calcP(v));
+  // Mark current peak
+  const peakIdx = vArr.reduce((best, v, i) =>
+    Math.abs(v - peakV) < Math.abs(vArr[best] - peakV) ? i : best, 0);
+
+  new Chart(document.getElementById('ch-curve').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: vArr.map(v => v.toFixed(0)),
+      datasets: [
+        {
+          ...chartDefaults,
+          label: 'P teórica',
+          data: pArr,
+          borderColor: '#ff6b2b',
+          backgroundColor: 'rgba(255,107,43,0.07)',
+        },
+        {
+          label: 'Pico operación',
+          data: pArr.map((p, i) => i === peakIdx ? p : null),
+          borderColor: '#f9d04a',
+          backgroundColor: '#f9d04a',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          showLine: false,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      animation: false,
+      scales: {
+        y: { ...axisStyle, title: { display:true, text:'W', color:'#486070', font:{size:9} } },
+        x: { ...axisStyle, ticks: { ...axisStyle.ticks, maxTicksLimit: 7 },
+             title: { display:true, text:'km/h', color:'#486070', font:{size:9} } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // ── Chart 3: Power Histogram ───────────────────────
+  const BINS = 10;
+  const maxVal = Math.max(...histP, 1);
+  const binCounts = Array(BINS).fill(0);
+  histP.forEach(p => {
+    if (p > 0) binCounts[Math.min(Math.floor(p / maxVal * BINS), BINS - 1)]++;
+  });
+  const binLabels = binCounts.map((_, i) => `${i * 10}–${(i + 1) * 10}%`);
+
+  new Chart(document.getElementById('ch-hist').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: binLabels,
+      datasets: [{
+        label: 'Frecuencia',
+        data: binCounts,
+        backgroundColor: binCounts.map((_, i) => `hsl(${145 + i * 9}, 65%, 48%)`),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      animation: false,
+      scales: {
+        y: { ...axisStyle },
+        x: { ...axisStyle, ticks: { ...axisStyle.ticks, maxRotation: 45 } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━  BOOT  ━━━━━━━━━━━━━━━━━━━━━━━━
+setRadius(1.5);
+loop();
+</script>
+</body>
+</html>
