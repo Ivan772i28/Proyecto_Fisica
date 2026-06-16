@@ -1,6 +1,3 @@
-![GitHub top language](https://img.shields.io/github/languages/top/tu-usuario/tu-repo?color=00e5a0&style=for-the-badge)
-![GitHub deployment status](https://img.shields.io/github/deployments/tu-usuario/tu-repo/github-pages?label=Despliegue&style=for-the-badge)
-![License](https://img.shields.io/github/license/tu-usuario/tu-repo?color=orange&style=for-the-badge)
 
 # Simulador Eólico Interactivo — TecNM
 
