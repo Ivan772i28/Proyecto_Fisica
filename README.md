@@ -35,7 +35,7 @@ Planeamos seguir mejorando el simulador con las siguientes características:
 ## 👥 Créditos y Autores
 Desarrollado como proyecto académico para el **Instituto Tecnológico de Aguascalientes (TecNM)**.
 
-* **Desarrollador:** [Ivan Dilan Picazo Flores](https://github.com/ivan)
+* **Desarrollador:** [Ivan Dilan Picazo Flores](https://github.com/ivan772i28)
 * **Materia:** [Introduccion a la Fisica Aplicada en la Ciberseguridad ]
 * **Profesor:** [Joseph Daniel Pineda Sandoval]
 
