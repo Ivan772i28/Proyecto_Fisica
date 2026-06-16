@@ -1,4 +1,4 @@
-# Proyecto_Fisica
+
 # Simulador Eólico Interactivo — TecNM Aguascalientes
 
 Este es un simulador web desarrollado para la visualización y análisis del potencial energético eólico. La herramienta permite modelar el comportamiento de aerogeneradores considerando variables geográficas y físicas específicas.
@@ -21,14 +21,3 @@ $$P = \frac{1}{2} \cdot \rho \cdot A \cdot v^3 \cdot C_p \cdot \eta$$
 | $\eta$ | Eficiencia | 0.92 |
 | Cut-in | Velocidad de inicio | 12.6 km/h |
 | Cut-out | Velocidad de corte | 90 km/h |
-
-## 🚀 Cómo ponerlo en línea (GitHub Pages)
-Para que cualquier persona pueda probar tu simulador sin descargar archivos:
-1. Sube todo tu código a un repositorio en GitHub.
-2. Ve a la pestaña **Settings** (Configuración) de tu repositorio.
-3. En el menú izquierdo, haz clic en **Pages**.
-4. En **Build and deployment**, selecciona la rama `main` y guarda.
-5. GitHub te dará un enlace (ej: `https://usuario.github.io/simulador-eolico/`). Ese es tu sitio web activo.
-
-## 📄 Licencia
-Este proyecto se entrega bajo licencia **MIT**. Eres libre de usarlo, modificarlo y distribuirlo con fines educativos.
