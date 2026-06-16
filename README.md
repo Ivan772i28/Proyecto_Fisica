@@ -31,6 +31,15 @@ Planeamos seguir mejorando el simulador con las siguientes características:
 - [ ] **Módulo de Baterías:** Simular un sistema de almacenamiento para la Smart Grid cuando no hay viento.
 - [ ] **Historial Local:** Guardar los resultados de simulaciones pasadas usando `localStorage`.
 - [ ] **Selector de Ciudades:** Permitir cambiar la altitud (modificando automáticamente la densidad del aire  **ρ**) para comparar Aguascalientes con ciudades costeras.
-- [ ] **Modo Climático Automatizado:** Conectar una API de clima real para simular con el viento actual de la región.
+- [ ] **Modo Climático Automatizado:** Conectar una API de clima real para simular con el viento actual de la región
+## 👥 Créditos y Autores
+Desarrollado como proyecto académico para el **Instituto Tecnológico de Aguascalientes (TecNM)**.
+
+* **Desarrollador:** [Ivan Dilan Picazo Flores](https://github.com/ivan)
+* **Materia:** [Introduccion a la Fisica Aplicada en la Ciberseguridad ]
+* **Profesor:** [Joseph Daniel Pineda Sandoval]
+
+
+
 
 
