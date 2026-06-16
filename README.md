@@ -30,7 +30,7 @@ El simulador se rige bajo la siguiente fórmula de potencia eólica:
 Planeamos seguir mejorando el simulador con las siguientes características:
 - [ ] **Módulo de Baterías:** Simular un sistema de almacenamiento para la Smart Grid cuando no hay viento.
 - [ ] **Historial Local:** Guardar los resultados de simulaciones pasadas usando `localStorage`.
-- [ ] **Selector de Ciudades:** Permitir cambiar la altitud (modificando automáticamente la densidad del aire $\rho$) para comparar Aguascalientes con ciudades costeras.
+- [ ] **Selector de Ciudades:** Permitir cambiar la altitud (modificando automáticamente la densidad del aire  **ρ**) para comparar Aguascalientes con ciudades costeras.
 - [ ] **Modo Climático Automatizado:** Conectar una API de clima real para simular con el viento actual de la región.
 
 
