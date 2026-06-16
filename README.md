@@ -1,4 +1,8 @@
-# Simulador Eólico Interactivo — TecNM Aguascalientes
+# Simulador Eólico Interactivo — TecNM
+
+[![Ver en vivo](https://img.shields.io/badge/Demo-Ver%20en%20Vivo-00e5a0?style=for-the-badge&logo=google-chrome&logoColor=black)](https://simuladorgeneradoreolico.netlify.app/)
+
+
 
 Este es un simulador web desarrollado para la visualización y análisis del potencial energético eólico. La herramienta permite modelar el comportamiento de aerogeneradores considerando variables geográficas y físicas específicas de la región.
 
